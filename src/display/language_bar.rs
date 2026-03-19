@@ -1,7 +1,6 @@
 use crate::data::languages::{self, LanguageBreakdown};
 use crate::display::theme::ThemeColors;
 use crate::lang_colors;
-use comfy_table::{Attribute, Cell, CellAlignment, ContentArrangement, Table};
 use owo_colors::OwoColorize;
 
 /// Render a proportional color bar and legend lines for languages.
@@ -124,55 +123,88 @@ pub fn render_detail_table(
     }
     println!();
 
-    // Table
-    let mut table = Table::new();
-    table
-        .set_content_arrangement(ContentArrangement::Dynamic)
-        .load_preset(if no_color {
-            comfy_table::presets::ASCII_BORDERS_ONLY
-        } else {
-            comfy_table::presets::UTF8_BORDERS_ONLY
-        });
+    // Build table rows as plain strings, then format manually.
+    // comfy-table can't measure ANSI escape widths correctly, so we avoid
+    // embedding color codes in cells.
+    let term_width = crate::display::terminal_width();
 
-    table.set_header(vec![
-        Cell::new("Language"),
-        Cell::new("Bytes").set_alignment(CellAlignment::Right),
-        Cell::new("Lines (est.)").set_alignment(CellAlignment::Right),
-        Cell::new("%").set_alignment(CellAlignment::Right),
-        Cell::new("Repos").set_alignment(CellAlignment::Right),
-    ]);
+    // Column widths: Language(dynamic), Bytes(10), Lines(12), %(8), Repos(6)
+    let fixed_cols = 10 + 12 + 8 + 6 + 8; // widths + separators/padding
+    let lang_col = (term_width.saturating_sub(fixed_cols)).clamp(12, 25);
+    let total_width = lang_col + fixed_cols;
 
-    for entry in &langs.entries {
-        let (r, g, b) = lang_colors::get_color(&entry.name);
-        let dot_name = if no_color {
-            format!("● {}", entry.name)
-        } else {
-            format!("{} {}", "●".truecolor(r, g, b), entry.name)
-        };
+    // Helper to format a row
+    let fmt_row = |name: &str, bytes: &str, lines: &str, pct: &str, repos: &str| -> String {
+        format!(
+            "  {:<lang_col$} {:>10} {:>12} {:>8} {:>6}",
+            name, bytes, lines, pct, repos
+        )
+    };
 
-        table.add_row(vec![
-            Cell::new(dot_name),
-            Cell::new(languages::format_bytes(entry.bytes)).set_alignment(CellAlignment::Right),
-            Cell::new(languages::format_lines(entry.bytes)).set_alignment(CellAlignment::Right),
-            Cell::new(format!("{:.1}%", entry.percentage)).set_alignment(CellAlignment::Right),
-            Cell::new(entry.repo_count.to_string()).set_alignment(CellAlignment::Right),
-        ]);
+    // Header row
+    let header_line = fmt_row("Language", "Bytes", "Lines (est.)", "%", "Repos");
+    if no_color {
+        println!("{header_line}");
+        println!("  {}", "─".repeat(total_width - 2));
+    } else {
+        println!("{}", colors.label(&header_line));
+        println!("  {}", colors.muted(&"─".repeat(total_width - 2)));
     }
 
-    // Totals row
-    table.add_row(vec![
-        Cell::new("Total").add_attribute(Attribute::Bold),
-        Cell::new(languages::format_bytes(langs.total_bytes))
-            .set_alignment(CellAlignment::Right)
-            .add_attribute(Attribute::Bold),
-        Cell::new(languages::format_lines(langs.total_bytes))
-            .set_alignment(CellAlignment::Right)
-            .add_attribute(Attribute::Bold),
-        Cell::new("100.0%")
-            .set_alignment(CellAlignment::Right)
-            .add_attribute(Attribute::Bold),
-        Cell::new(""),
-    ]);
+    // Data rows
+    for entry in &langs.entries {
+        let (r, g, b) = lang_colors::get_color(&entry.name);
+        let dot = if no_color {
+            "●".to_string()
+        } else {
+            format!("{}", "●".truecolor(r, g, b))
+        };
 
-    println!("{table}");
+        // The dot is 1 visible char but may have ANSI codes, so we pad the name manually
+        let name_padded = entry.name.clone();
+        let bytes_str = languages::format_bytes(entry.bytes);
+        let lines_str = languages::format_lines(entry.bytes);
+        let pct_str = format!("{:.1}%", entry.percentage);
+        let repos_str = entry.repo_count.to_string();
+
+        // Print with the colored dot prepended (not inside the padding calculation)
+        let row = format!(
+            "  {dot} {:<name_w$} {:>10} {:>12} {:>8} {:>6}",
+            name_padded,
+            bytes_str,
+            lines_str,
+            pct_str,
+            repos_str,
+            name_w = lang_col - 3, // "● " = 2 visible chars + 1 space
+        );
+
+        if no_color {
+            println!("{row}");
+        } else {
+            // We already have the colored dot, print as-is
+            println!("{row}");
+        }
+    }
+
+    // Separator + totals
+    if no_color {
+        println!("  {}", "─".repeat(total_width - 2));
+    } else {
+        println!("  {}", colors.muted(&"─".repeat(total_width - 2)));
+    }
+
+    let total_row = format!(
+        "  {:<lang_col$} {:>10} {:>12} {:>8}",
+        "Total",
+        languages::format_bytes(langs.total_bytes),
+        languages::format_lines(langs.total_bytes),
+        "100.0%",
+    );
+    if no_color {
+        println!("{total_row}");
+    } else {
+        println!("{}", total_row.bold());
+    }
+
+    println!();
 }
