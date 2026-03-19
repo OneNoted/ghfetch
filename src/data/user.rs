@@ -86,7 +86,7 @@ pub async fn fetch_user_profile(
                 .iter()
                 .map(|r| (r.name.clone(), r.languages.clone()))
                 .collect();
-            let languages = crate::data::languages::aggregate_languages(&lang_map, opts.lang_limit);
+            let languages = crate::data::languages::aggregate_languages(&lang_map, opts.effective_lang_limit());
 
             let top: Vec<RepoSummary> = {
                 let mut sorted = filtered;
@@ -128,7 +128,7 @@ pub async fn fetch_user_profile(
                 }
                 Some(crate::data::languages::aggregate_from_rest(
                     &lang_map,
-                    opts.lang_limit,
+                    opts.effective_lang_limit(),
                 ))
             } else {
                 None

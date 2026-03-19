@@ -5,6 +5,17 @@ use crate::display::theme::ThemeColors;
 
 pub fn render(profile: &UserProfile, opts: &UserOpts, theme: Theme, no_color: bool) {
     let colors = ThemeColors::from_theme(theme);
+
+    // Detailed language table view (--languages only)
+    if opts.detailed_languages() {
+        if let Some(ref langs) = profile.languages {
+            language_bar::render_detail_table(langs, &profile.login, &colors, no_color);
+        } else {
+            println!("No language data available.");
+        }
+        return;
+    }
+
     let width = card_width();
     let inner = width - 4;
 

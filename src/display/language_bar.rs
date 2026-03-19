@@ -1,9 +1,11 @@
-use crate::data::languages::LanguageBreakdown;
+use crate::data::languages::{self, LanguageBreakdown};
 use crate::display::theme::ThemeColors;
 use crate::lang_colors;
+use comfy_table::{Attribute, Cell, CellAlignment, ContentArrangement, Table};
 use owo_colors::OwoColorize;
 
 /// Render a proportional color bar and legend lines for languages.
+/// Used inside the card view.
 pub fn render_bar(
     langs: &LanguageBreakdown,
     bar_width: usize,
@@ -86,4 +88,91 @@ pub fn render_bar(
     }
 
     lines
+}
+
+/// Render a detailed language breakdown table.
+/// Printed directly to stdout (outside the card).
+pub fn render_detail_table(
+    langs: &LanguageBreakdown,
+    title: &str,
+    colors: &ThemeColors,
+    no_color: bool,
+) {
+    if langs.entries.is_empty() {
+        println!("No language data available.");
+        return;
+    }
+
+    // Header
+    let header = if no_color {
+        format!("{title} — Language Breakdown")
+    } else {
+        format!(
+            "{} {} {}",
+            colors.title(title),
+            colors.muted("—"),
+            colors.title("Language Breakdown")
+        )
+    };
+    println!("\n{header}");
+
+    // Bar (wider since we're outside the card)
+    let bar_width = crate::display::terminal_width().clamp(40, 80);
+    let bar_lines = render_bar(langs, bar_width, colors, no_color);
+    for line in &bar_lines {
+        println!("{line}");
+    }
+    println!();
+
+    // Table
+    let mut table = Table::new();
+    table
+        .set_content_arrangement(ContentArrangement::Dynamic)
+        .load_preset(if no_color {
+            comfy_table::presets::ASCII_BORDERS_ONLY
+        } else {
+            comfy_table::presets::UTF8_BORDERS_ONLY
+        });
+
+    table.set_header(vec![
+        Cell::new("Language"),
+        Cell::new("Bytes").set_alignment(CellAlignment::Right),
+        Cell::new("Lines (est.)").set_alignment(CellAlignment::Right),
+        Cell::new("%").set_alignment(CellAlignment::Right),
+        Cell::new("Repos").set_alignment(CellAlignment::Right),
+    ]);
+
+    for entry in &langs.entries {
+        let (r, g, b) = lang_colors::get_color(&entry.name);
+        let dot_name = if no_color {
+            format!("● {}", entry.name)
+        } else {
+            format!("{} {}", "●".truecolor(r, g, b), entry.name)
+        };
+
+        table.add_row(vec![
+            Cell::new(dot_name),
+            Cell::new(languages::format_bytes(entry.bytes)).set_alignment(CellAlignment::Right),
+            Cell::new(languages::format_lines(entry.bytes)).set_alignment(CellAlignment::Right),
+            Cell::new(format!("{:.1}%", entry.percentage)).set_alignment(CellAlignment::Right),
+            Cell::new(entry.repo_count.to_string()).set_alignment(CellAlignment::Right),
+        ]);
+    }
+
+    // Totals row
+    table.add_row(vec![
+        Cell::new("Total").add_attribute(Attribute::Bold),
+        Cell::new(languages::format_bytes(langs.total_bytes))
+            .set_alignment(CellAlignment::Right)
+            .add_attribute(Attribute::Bold),
+        Cell::new(languages::format_lines(langs.total_bytes))
+            .set_alignment(CellAlignment::Right)
+            .add_attribute(Attribute::Bold),
+        Cell::new("100.0%")
+            .set_alignment(CellAlignment::Right)
+            .add_attribute(Attribute::Bold),
+        Cell::new(""),
+    ]);
+
+    println!("{table}");
 }

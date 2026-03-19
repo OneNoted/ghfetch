@@ -43,7 +43,8 @@ pub async fn fetch_repo_profile(
             repo.to_string(),
             lang_bytes.into_iter().collect::<Vec<_>>(),
         )]);
-        Some(crate::data::languages::aggregate_languages(&lang_map, 10))
+        let limit = if opts.detailed_languages() { 0 } else { 10 };
+        Some(crate::data::languages::aggregate_languages(&lang_map, limit))
     } else {
         None
     };

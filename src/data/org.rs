@@ -53,7 +53,7 @@ async fn fetch_org_graphql(
             .iter()
             .map(|r| (r.name.clone(), r.languages.clone()))
             .collect();
-        Some(crate::data::languages::aggregate_languages(&lang_map, 10))
+        Some(crate::data::languages::aggregate_languages(&lang_map, opts.effective_lang_limit()))
     } else {
         None
     };
@@ -114,7 +114,7 @@ async fn fetch_org_rest(
                 lang_map.insert(repo.name.clone(), langs);
             }
         }
-        Some(crate::data::languages::aggregate_from_rest(&lang_map, 10))
+        Some(crate::data::languages::aggregate_from_rest(&lang_map, opts.effective_lang_limit()))
     } else {
         None
     };

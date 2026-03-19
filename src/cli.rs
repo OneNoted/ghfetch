@@ -101,9 +101,9 @@ pub struct UserOpts {
     #[arg(long)]
     pub all: bool,
 
-    /// Maximum number of languages to display
-    #[arg(long, default_value_t = 10)]
-    pub lang_limit: usize,
+    /// Maximum number of languages to display (default: 10, or all with --languages)
+    #[arg(long)]
+    pub lang_limit: Option<usize>,
 
     /// Maximum number of repos to display
     #[arg(long, default_value_t = 10)]
@@ -143,6 +143,10 @@ pub struct OrgOpts {
     #[arg(long)]
     pub all: bool,
 
+    /// Maximum number of languages to display (default: 10, or all with --languages)
+    #[arg(long)]
+    pub lang_limit: Option<usize>,
+
     /// Maximum number of repos to display
     #[arg(long, default_value_t = 10)]
     pub repo_limit: usize,
@@ -157,7 +161,7 @@ impl UserOpts {
             repos: false,
             contributions: false,
             all: false,
-            lang_limit: 10,
+            lang_limit: None,
             repo_limit: 10,
             sort_by: SortBy::Stars,
             no_forks: false,
@@ -171,6 +175,20 @@ impl UserOpts {
 
     pub fn show_languages(&self) -> bool {
         self.all || self.languages || self.show_full_card()
+    }
+
+    /// True when --languages was explicitly passed (detailed table view).
+    pub fn detailed_languages(&self) -> bool {
+        self.languages && !self.all && !self.show_full_card()
+    }
+
+    /// Effective lang limit: 0 (all) for detailed view unless explicitly set.
+    pub fn effective_lang_limit(&self) -> usize {
+        match self.lang_limit {
+            Some(n) => n,
+            None if self.detailed_languages() => 0,
+            None => 10,
+        }
     }
 
     pub fn show_streaks(&self) -> bool {
@@ -194,6 +212,10 @@ impl RepoOpts {
     pub fn show_languages(&self) -> bool {
         self.all || self.languages || self.show_full_card()
     }
+
+    pub fn detailed_languages(&self) -> bool {
+        self.languages && !self.all && !self.show_full_card()
+    }
 }
 
 impl OrgOpts {
@@ -203,6 +225,18 @@ impl OrgOpts {
 
     pub fn show_languages(&self) -> bool {
         self.all || self.languages || self.show_full_card()
+    }
+
+    pub fn detailed_languages(&self) -> bool {
+        self.languages && !self.all && !self.show_full_card()
+    }
+
+    pub fn effective_lang_limit(&self) -> usize {
+        match self.lang_limit {
+            Some(n) => n,
+            None if self.detailed_languages() => 0,
+            None => 10,
+        }
     }
 
     pub fn show_repos(&self) -> bool {
