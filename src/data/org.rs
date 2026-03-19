@@ -30,6 +30,78 @@ pub async fn fetch_org_profile(
     opts: &OrgOpts,
 ) -> Result<OrgProfile> {
     let org = client.get_org(orgname).await?;
+
+    if client.is_authenticated() {
+        fetch_org_graphql(client, org, orgname, opts).await
+    } else {
+        fetch_org_rest(client, org, orgname, opts).await
+    }
+}
+
+async fn fetch_org_graphql(
+    client: &GhClient,
+    org: crate::api::types::GitHubOrg,
+    orgname: &str,
+    opts: &OrgOpts,
+) -> Result<OrgProfile> {
+    let repos = client.get_org_repos_graphql(orgname).await?;
+
+    let stats = crate::data::stats::aggregate_from_graphql(&repos);
+
+    let languages = if opts.show_languages() {
+        let lang_map: HashMap<String, Vec<(String, u64)>> = repos
+            .iter()
+            .map(|r| (r.name.clone(), r.languages.clone()))
+            .collect();
+        Some(crate::data::languages::aggregate_languages(&lang_map, 10))
+    } else {
+        None
+    };
+
+    let top_repos = if opts.show_repos() || opts.show_full_card() {
+        let mut sorted = repos;
+        sorted.sort_by(|a, b| b.stargazer_count.cmp(&a.stargazer_count));
+        Some(
+            sorted
+                .into_iter()
+                .take(opts.repo_limit)
+                .map(|r| RepoSummary {
+                    name: r.name,
+                    stars: r.stargazer_count,
+                    forks: r.fork_count,
+                    language: r.languages.first().map(|(n, _)| n.clone()),
+                    description: r.description,
+                    is_private: r.is_private,
+                })
+                .collect(),
+        )
+    } else {
+        None
+    };
+
+    Ok(OrgProfile {
+        login: org.login,
+        name: org.name,
+        description: org.description,
+        location: org.location,
+        blog: org.blog,
+        twitter: org.twitter_username,
+        public_repos: org.public_repos,
+        followers: org.followers,
+        created: org.created_at.format("%b %Y").to_string(),
+        url: org.html_url,
+        stats,
+        languages,
+        top_repos,
+    })
+}
+
+async fn fetch_org_rest(
+    client: &GhClient,
+    org: crate::api::types::GitHubOrg,
+    orgname: &str,
+    opts: &OrgOpts,
+) -> Result<OrgProfile> {
     let repos = client.get_org_repos(orgname, 100).await?;
 
     let stats = crate::data::stats::aggregate_from_rest(&repos);
@@ -48,7 +120,7 @@ pub async fn fetch_org_profile(
     };
 
     let top_repos = if opts.show_repos() || opts.show_full_card() {
-        let mut sorted = repos.clone();
+        let mut sorted = repos;
         sorted.sort_by(|a, b| b.stargazers_count.cmp(&a.stargazers_count));
         Some(
             sorted
@@ -60,6 +132,7 @@ pub async fn fetch_org_profile(
                     forks: r.forks_count,
                     language: r.language,
                     description: r.description,
+                    is_private: false, // REST doesn't expose this for non-owned repos
                 })
                 .collect(),
         )

@@ -45,6 +45,7 @@ pub struct RepoSummary {
     pub forks: u32,
     pub language: Option<String>,
     pub description: Option<String>,
+    pub is_private: bool,
 }
 
 pub async fn fetch_user_profile(
@@ -99,6 +100,7 @@ pub async fn fetch_user_profile(
                         forks: r.fork_count,
                         language: r.languages.first().map(|(n, _)| n.clone()),
                         description: r.description,
+                        is_private: r.is_private,
                     })
                     .collect()
             };
@@ -144,6 +146,7 @@ pub async fn fetch_user_profile(
                         forks: r.forks_count,
                         language: r.language,
                         description: r.description,
+                        is_private: false, // REST /users/:user/repos doesn't include private for other users
                     })
                     .collect()
             };

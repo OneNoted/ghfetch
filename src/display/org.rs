@@ -29,9 +29,9 @@ pub fn render(profile: &OrgProfile, opts: &OrgOpts, theme: Theme, no_color: bool
     // Fields
     let label_w = 12;
     let fields: Vec<(&str, Option<String>)> = vec![
-        ("Name", profile.name.clone()),
-        ("Description", profile.description.clone()),
-        ("Location", profile.location.clone()),
+        ("Name", profile.name.clone().filter(|s| !s.is_empty())),
+        ("Description", profile.description.clone().filter(|s| !s.is_empty())),
+        ("Location", profile.location.clone().filter(|s| !s.is_empty())),
         ("Blog", profile.blog.clone().filter(|s| !s.is_empty())),
         ("Twitter", profile.twitter.clone().map(|t| format!("@{t}"))),
         ("Repos", Some(format_number(profile.public_repos))),
@@ -103,16 +103,18 @@ pub fn render(profile: &OrgProfile, opts: &OrgOpts, theme: Theme, no_color: bool
                 for r in repos {
                     let lang = r.language.as_deref().unwrap_or("");
                     let line = if no_color {
+                        let private_tag = if r.is_private { " 🔒" } else { "" };
                         format!(
-                            "  {} ★{} 🍴{}  {lang}",
+                            "  {}{private_tag} ★{} ⑂{}  {lang}",
                             r.name,
                             format_number(r.stars),
                             format_number(r.forks)
                         )
                     } else {
                         format!(
-                            "  {} {}{}  {}",
+                            "  {}{} {}{}  {}",
                             colors.accent(&r.name),
+                            if r.is_private { colors.muted(" 🔒") } else { String::new() },
                             colors.value(&format!("★{}", format_number(r.stars))),
                             colors.muted(&format!(" ⑂{}", format_number(r.forks))),
                             colors.muted(lang)

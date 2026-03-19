@@ -24,10 +24,10 @@ pub fn render(profile: &UserProfile, opts: &UserOpts, theme: Theme, no_color: bo
 
     // Profile fields
     let fields: Vec<(&str, Option<String>)> = vec![
-        ("Name", profile.name.clone()),
-        ("Bio", profile.bio.clone()),
-        ("Location", profile.location.clone()),
-        ("Company", profile.company.clone()),
+        ("Name", profile.name.clone().filter(|s| !s.is_empty())),
+        ("Bio", profile.bio.clone().filter(|s| !s.is_empty())),
+        ("Location", profile.location.clone().filter(|s| !s.is_empty())),
+        ("Company", profile.company.clone().filter(|s| !s.is_empty())),
         ("Blog", profile.blog.clone().filter(|s| !s.is_empty())),
         ("Twitter", profile.twitter.clone().map(|t| format!("@{t}"))),
         ("Joined", Some(profile.joined.clone())),
@@ -205,17 +205,19 @@ pub fn render(profile: &UserProfile, opts: &UserOpts, theme: Theme, no_color: bo
 
                 for r in repos {
                     let lang = r.language.as_deref().unwrap_or("");
+                    let private_tag = if r.is_private { " 🔒" } else { "" };
                     let line = if no_color {
                         format!(
-                            "  {} ★{} 🍴{}  {lang}",
+                            "  {}{private_tag} ★{} ⑂{}  {lang}",
                             r.name,
                             format_number(r.stars),
                             format_number(r.forks)
                         )
                     } else {
                         format!(
-                            "  {} {}{}  {}",
+                            "  {}{} {}{}  {}",
                             colors.accent(&r.name),
+                            if r.is_private { colors.muted(" 🔒") } else { String::new() },
                             colors.value(&format!("★{}", format_number(r.stars))),
                             colors.muted(&format!(" ⑂{}", format_number(r.forks))),
                             colors.muted(lang)

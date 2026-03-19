@@ -19,8 +19,10 @@ impl GhClient {
         let mut page = 1u32;
 
         loop {
+            // "all" includes private repos when authenticated
+            let visibility = if self.is_authenticated() { "all" } else { "owner" };
             let url = format!(
-                "{BASE}/users/{username}/repos?per_page={per_page}&page={page}&sort=updated&type=owner"
+                "{BASE}/users/{username}/repos?per_page={per_page}&page={page}&sort=updated&type={visibility}"
             );
             let resp = self
                 .rest_get(&url)
@@ -73,8 +75,9 @@ impl GhClient {
         let mut page = 1u32;
 
         loop {
+            // "all" includes private repos when authenticated with org access
             let url = format!(
-                "{BASE}/orgs/{orgname}/repos?per_page={per_page}&page={page}&sort=updated&type=sources"
+                "{BASE}/orgs/{orgname}/repos?per_page={per_page}&page={page}&sort=updated&type=all"
             );
             let resp = self
                 .rest_get(&url)
