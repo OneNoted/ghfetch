@@ -9,6 +9,10 @@ GitHub stats in the terminal, neofetch-style.
 
 `ghfetch` renders compact terminal cards for GitHub users, repositories, and organizations, with optional JSON output for scripting.
 
+<img width="589" height="507" alt="image" src="https://github.com/user-attachments/assets/4365631b-fd55-424f-8aa0-fb3d79587cf4" /> <img width="599" height="566" alt="image" src="https://github.com/user-attachments/assets/03a5fcfb-dc09-4f5a-b91b-e56472c9341a" />
+
+
+
 ## Features
 
 - User, repository, and organization views
