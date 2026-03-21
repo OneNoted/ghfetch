@@ -2,7 +2,15 @@
 name = "ghfetch"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.85"
 description = "GitHub stats in the terminal, neofetch-style"
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/OneNoted/ghfetch"
+homepage = "https://github.com/OneNoted/ghfetch"
+documentation = "https://docs.rs/ghfetch"
+keywords = ["github", "cli", "terminal", "stats", "fetch"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 clap = { version = "4", features = ["derive", "env"] }
