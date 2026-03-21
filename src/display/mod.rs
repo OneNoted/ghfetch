@@ -22,21 +22,13 @@ pub fn card_width() -> usize {
 pub fn top_border(width: usize, colors: &ThemeColors, no_color: bool) -> String {
     let inner = "─".repeat(width - 2);
     let line = format!("╭{inner}╮");
-    if no_color {
-        line
-    } else {
-        colors.border(&line)
-    }
+    if no_color { line } else { colors.border(&line) }
 }
 
 pub fn bottom_border(width: usize, colors: &ThemeColors, no_color: bool) -> String {
     let inner = "─".repeat(width - 2);
     let line = format!("╰{inner}╯");
-    if no_color {
-        line
-    } else {
-        colors.border(&line)
-    }
+    if no_color { line } else { colors.border(&line) }
 }
 
 pub fn card_line(content: &str, width: usize, colors: &ThemeColors, no_color: bool) -> String {
@@ -73,11 +65,7 @@ pub fn empty_line(width: usize, colors: &ThemeColors, no_color: bool) -> String 
 pub fn separator_line(width: usize, colors: &ThemeColors, no_color: bool) -> String {
     let inner_width = width - 4;
     let sep = "─".repeat(inner_width);
-    let content = if no_color {
-        sep
-    } else {
-        colors.muted(&sep)
-    };
+    let content = if no_color { sep } else { colors.muted(&sep) };
     card_line(&content, width, colors, no_color)
 }
 
@@ -162,4 +150,33 @@ pub fn format_number(n: u32) -> String {
         result.push(c);
     }
     result.chars().rev().collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cli::Theme;
+
+    #[test]
+    fn card_line_truncates_plain_text_to_fit() {
+        let colors = ThemeColors::from_theme(Theme::Mocha);
+        let line = card_line("abcdefghijklmnopqrstuvwxyz", 20, &colors, true);
+
+        assert_eq!(strip_ansi_len(&line), 20);
+        assert!(line.contains("abcdefghijklm..."));
+    }
+
+    #[test]
+    fn card_line_truncates_ansi_text_to_fit() {
+        let colors = ThemeColors::from_theme(Theme::Mocha);
+        let line = card_line(
+            "\x1b[31mabcdefghijklmnopqrstuvwxyz\x1b[0m",
+            20,
+            &colors,
+            true,
+        );
+
+        assert_eq!(strip_ansi_len(&line), 20);
+        assert!(line.contains("\x1b[0m..."));
+    }
 }

@@ -65,7 +65,8 @@ pub fn render_bar(
             format!("{dot} {}", colors.value(&label))
         };
 
-        let entry_visible_len = 2 + entry.name.len() + 1 + format!("{:.1}%", entry.percentage).len();
+        let entry_visible_len =
+            2 + entry.name.len() + 1 + format!("{:.1}%", entry.percentage).len();
 
         if legend_visible_len > 0 && legend_visible_len + 2 + entry_visible_len > max_legend_width {
             lines.push(legend_line);

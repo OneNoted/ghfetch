@@ -1,7 +1,7 @@
 use crate::cli::{RepoOpts, Theme};
 use crate::data::repo::RepoProfile;
-use crate::display::*;
 use crate::display::theme::ThemeColors;
+use crate::display::*;
 
 pub fn render(profile: &RepoProfile, opts: &RepoOpts, theme: Theme, no_color: bool) {
     let colors = ThemeColors::from_theme(theme);
@@ -59,11 +59,7 @@ pub fn render(profile: &RepoProfile, opts: &RepoOpts, theme: Theme, no_color: bo
         ("Branch", profile.default_branch.clone()),
         (
             "License",
-            profile
-                .license
-                .as_deref()
-                .unwrap_or("None")
-                .to_string(),
+            profile.license.as_deref().unwrap_or("None").to_string(),
         ),
         ("Created", profile.created.clone()),
         ("Updated", profile.updated.clone()),
@@ -104,18 +100,18 @@ pub fn render(profile: &RepoProfile, opts: &RepoOpts, theme: Theme, no_color: bo
     // Languages
     if opts.show_languages()
         && let Some(ref langs) = profile.languages
-            && !langs.entries.is_empty() {
-                lines.push(String::new());
-                lines.push(if no_color {
-                    "Languages".to_string()
-                } else {
-                    colors.title("Languages")
-                });
+        && !langs.entries.is_empty()
+    {
+        lines.push(String::new());
+        lines.push(if no_color {
+            "Languages".to_string()
+        } else {
+            colors.title("Languages")
+        });
 
-                let bar_lines =
-                    language_bar::render_bar(langs, inner.min(40), &colors, no_color);
-                lines.extend(bar_lines);
-            }
+        let bar_lines = language_bar::render_bar(langs, inner.min(40), &colors, no_color);
+        lines.extend(bar_lines);
+    }
 
     // Render
     println!("{}", top_border(width, &colors, no_color));

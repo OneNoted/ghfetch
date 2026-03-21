@@ -1,7 +1,10 @@
 use clap::{Parser, Subcommand, ValueEnum};
 
 #[derive(Parser)]
-#[command(name = "ghfetch", about = "GitHub stats in the terminal, neofetch-style")]
+#[command(
+    name = "ghfetch",
+    about = "GitHub stats in the terminal, neofetch-style"
+)]
 #[command(version, arg_required_else_help = true)]
 pub struct Cli {
     #[command(subcommand)]

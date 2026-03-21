@@ -1,7 +1,7 @@
 use crate::cli::{Theme, UserOpts};
 use crate::data::user::UserProfile;
-use crate::display::*;
 use crate::display::theme::ThemeColors;
+use crate::display::*;
 
 pub fn render(profile: &UserProfile, opts: &UserOpts, theme: Theme, no_color: bool) {
     let colors = ThemeColors::from_theme(theme);
@@ -25,7 +25,12 @@ pub fn render(profile: &UserProfile, opts: &UserOpts, theme: Theme, no_color: bo
     let title = if no_color {
         format!("{} @ GitHub", profile.login)
     } else {
-        format!("{} {} {}", colors.title(&profile.login), colors.muted("@"), colors.muted("GitHub"))
+        format!(
+            "{} {} {}",
+            colors.title(&profile.login),
+            colors.muted("@"),
+            colors.muted("GitHub")
+        )
     };
     lines.push(title);
 
@@ -37,7 +42,10 @@ pub fn render(profile: &UserProfile, opts: &UserOpts, theme: Theme, no_color: bo
     let fields: Vec<(&str, Option<String>)> = vec![
         ("Name", profile.name.clone().filter(|s| !s.is_empty())),
         ("Bio", profile.bio.clone().filter(|s| !s.is_empty())),
-        ("Location", profile.location.clone().filter(|s| !s.is_empty())),
+        (
+            "Location",
+            profile.location.clone().filter(|s| !s.is_empty()),
+        ),
         ("Company", profile.company.clone().filter(|s| !s.is_empty())),
         ("Blog", profile.blog.clone().filter(|s| !s.is_empty())),
         ("Twitter", profile.twitter.clone().map(|t| format!("@{t}"))),
@@ -78,8 +86,10 @@ pub fn render(profile: &UserProfile, opts: &UserOpts, theme: Theme, no_color: bo
             let stats_line = if no_color {
                 format!(
                     "{:<label_w$}{:<10}{:<label_w$}{}",
-                    "Stars:", format_number(profile.stats.total_stars),
-                    "PRs:", format_number(c.total_prs)
+                    "Stars:",
+                    format_number(profile.stats.total_stars),
+                    "PRs:",
+                    format_number(c.total_prs)
                 )
             } else {
                 format!(
@@ -96,8 +106,10 @@ pub fn render(profile: &UserProfile, opts: &UserOpts, theme: Theme, no_color: bo
             let stats_line2 = if no_color {
                 format!(
                     "{:<label_w$}{:<10}{:<label_w$}{}",
-                    "Commits:", format_number(c.total_commits),
-                    "Issues:", format_number(c.total_issues)
+                    "Commits:",
+                    format_number(c.total_commits),
+                    "Issues:",
+                    format_number(c.total_issues)
                 )
             } else {
                 format!(
@@ -143,8 +155,10 @@ pub fn render(profile: &UserProfile, opts: &UserOpts, theme: Theme, no_color: bo
             let stars = if no_color {
                 format!(
                     "{:<label_w$}{:<10}{:<label_w$}{}",
-                    "Stars:", format_number(profile.stats.total_stars),
-                    "Repos:", format_number(profile.stats.total_repos)
+                    "Stars:",
+                    format_number(profile.stats.total_stars),
+                    "Repos:",
+                    format_number(profile.stats.total_repos)
                 )
             } else {
                 format!(
@@ -158,7 +172,11 @@ pub fn render(profile: &UserProfile, opts: &UserOpts, theme: Theme, no_color: bo
             lines.push(stars);
 
             let forks = if no_color {
-                format!("{:<label_w$}{}", "Forks:", format_number(profile.stats.total_forks))
+                format!(
+                    "{:<label_w$}{}",
+                    "Forks:",
+                    format_number(profile.stats.total_forks)
+                )
             } else {
                 format!(
                     "{}{}",
@@ -173,70 +191,76 @@ pub fn render(profile: &UserProfile, opts: &UserOpts, theme: Theme, no_color: bo
     // Languages section
     if opts.show_languages()
         && let Some(ref langs) = profile.languages
-            && !langs.entries.is_empty() {
-                lines.push(String::new());
-                let header = if no_color {
-                    "Languages".to_string()
-                } else {
-                    colors.title("Languages")
-                };
-                lines.push(header);
+        && !langs.entries.is_empty()
+    {
+        lines.push(String::new());
+        let header = if no_color {
+            "Languages".to_string()
+        } else {
+            colors.title("Languages")
+        };
+        lines.push(header);
 
-                let bar_lines =
-                    language_bar::render_bar(langs, inner.min(40), &colors, no_color);
-                lines.extend(bar_lines);
-            }
+        let bar_lines = language_bar::render_bar(langs, inner.min(40), &colors, no_color);
+        lines.extend(bar_lines);
+    }
 
     // Streaks section
     if opts.show_streaks()
-        && let Some(ref s) = profile.streaks {
-            lines.push(String::new());
-            let header = if no_color {
-                "Streaks".to_string()
-            } else {
-                colors.title("Streaks")
-            };
-            lines.push(header);
+        && let Some(ref s) = profile.streaks
+    {
+        lines.push(String::new());
+        let header = if no_color {
+            "Streaks".to_string()
+        } else {
+            colors.title("Streaks")
+        };
+        lines.push(header);
 
-            let streak_lines = streak::render_streaks(s, &colors, no_color);
-            lines.extend(streak_lines);
-        }
+        let streak_lines = streak::render_streaks(s, &colors, no_color);
+        lines.extend(streak_lines);
+    }
 
     // Repos table
     if opts.show_repos()
         && let Some(ref repos) = profile.top_repos
-            && !repos.is_empty() {
-                lines.push(String::new());
-                let header = if no_color {
-                    "Top Repositories".to_string()
-                } else {
-                    colors.title("Top Repositories")
-                };
-                lines.push(header);
+        && !repos.is_empty()
+    {
+        lines.push(String::new());
+        let header = if no_color {
+            "Top Repositories".to_string()
+        } else {
+            colors.title("Top Repositories")
+        };
+        lines.push(header);
 
-                for r in repos {
-                    let lang = r.language.as_deref().unwrap_or("");
-                    let private_tag = if r.is_private { " 🔒" } else { "" };
-                    let line = if no_color {
-                        format!(
-                            "  {}{private_tag} ★{} ⑂{}  {lang}",
-                            r.name,
-                            format_number(r.stars),
-                            format_number(r.forks)
-                        )
+        for r in repos {
+            let lang = r.language.as_deref().unwrap_or("");
+            let private_tag = if r.is_private { " 🔒" } else { "" };
+            let line = if no_color {
+                format!(
+                    "  {}{private_tag} ★{} ⑂{}  {lang}",
+                    r.name,
+                    format_number(r.stars),
+                    format_number(r.forks)
+                )
+            } else {
+                format!(
+                    "  {}{} {}{}  {}",
+                    colors.accent(&r.name),
+                    if r.is_private {
+                        colors.muted(" 🔒")
                     } else {
-                        format!(
-                            "  {}{} {}{}  {}",
-                            colors.accent(&r.name),
-                            if r.is_private { colors.muted(" 🔒") } else { String::new() },
-                            colors.value(&format!("★{}", format_number(r.stars))),
-                            colors.muted(&format!(" ⑂{}", format_number(r.forks))),
-                            colors.muted(lang)
-                        )
-                    };
-                    lines.push(line);
-                }
-            }
+                        String::new()
+                    },
+                    colors.value(&format!("★{}", format_number(r.stars))),
+                    colors.muted(&format!(" ⑂{}", format_number(r.forks))),
+                    colors.muted(lang)
+                )
+            };
+            lines.push(line);
+        }
+    }
 
     // Render the card
     println!("{}", top_border(width, &colors, no_color));

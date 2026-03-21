@@ -9,9 +9,7 @@ pub struct GhClient {
 
 impl GhClient {
     pub fn new(token: Option<String>, verbose: bool) -> Result<Self> {
-        let http = reqwest::Client::builder()
-            .user_agent("ghfetch")
-            .build()?;
+        let http = reqwest::Client::builder().user_agent("ghfetch").build()?;
         Ok(Self {
             http,
             token,
@@ -46,7 +44,11 @@ impl GhClient {
         Ok(resp)
     }
 
-    pub async fn graphql(&self, query: &str, variables: &serde_json::Value) -> Result<serde_json::Value> {
+    pub async fn graphql(
+        &self,
+        query: &str,
+        variables: &serde_json::Value,
+    ) -> Result<serde_json::Value> {
         let token = self
             .token
             .as_ref()

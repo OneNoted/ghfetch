@@ -1,11 +1,7 @@
 use crate::data::contributions::StreakInfo;
 use crate::display::theme::ThemeColors;
 
-pub fn render_streaks(
-    streaks: &StreakInfo,
-    colors: &ThemeColors,
-    no_color: bool,
-) -> Vec<String> {
+pub fn render_streaks(streaks: &StreakInfo, colors: &ThemeColors, no_color: bool) -> Vec<String> {
     let mut lines = Vec::new();
 
     let current = if streaks.current_streak > 0 {

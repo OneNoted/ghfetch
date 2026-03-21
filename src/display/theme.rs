@@ -33,7 +33,10 @@ impl ThemeColors {
     }
 
     pub fn title(&self, s: &str) -> String {
-        format!("{}", s.truecolor(self.title.r, self.title.g, self.title.b).bold())
+        format!(
+            "{}",
+            s.truecolor(self.title.r, self.title.g, self.title.b).bold()
+        )
     }
 
     pub fn label(&self, s: &str) -> String {
@@ -45,14 +48,27 @@ impl ThemeColors {
     }
 
     pub fn accent(&self, s: &str) -> String {
-        format!("{}", s.truecolor(self.accent.r, self.accent.g, self.accent.b))
+        format!(
+            "{}",
+            s.truecolor(self.accent.r, self.accent.g, self.accent.b)
+        )
     }
 
     pub fn muted(&self, s: &str) -> String {
-        format!("{}", s.truecolor(self.muted_color.r, self.muted_color.g, self.muted_color.b))
+        format!(
+            "{}",
+            s.truecolor(self.muted_color.r, self.muted_color.g, self.muted_color.b)
+        )
     }
 
     pub fn border(&self, s: &str) -> String {
-        format!("{}", s.truecolor(self.border_color.r, self.border_color.g, self.border_color.b))
+        format!(
+            "{}",
+            s.truecolor(
+                self.border_color.r,
+                self.border_color.g,
+                self.border_color.b
+            )
+        )
     }
 }

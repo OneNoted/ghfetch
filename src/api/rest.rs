@@ -20,7 +20,11 @@ impl GhClient {
 
         loop {
             // "all" includes private repos when authenticated
-            let visibility = if self.is_authenticated() { "all" } else { "owner" };
+            let visibility = if self.is_authenticated() {
+                "all"
+            } else {
+                "owner"
+            };
             let url = format!(
                 "{BASE}/users/{username}/repos?per_page={per_page}&page={page}&sort=updated&type={visibility}"
             );

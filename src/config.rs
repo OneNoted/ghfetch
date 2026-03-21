@@ -8,19 +8,22 @@ use anyhow::Result;
 /// 5. None (unauthenticated)
 pub async fn resolve_token(flag_token: Option<String>) -> Option<String> {
     if let Some(t) = flag_token
-        && !t.is_empty() {
-            return Some(t);
-        }
+        && !t.is_empty()
+    {
+        return Some(t);
+    }
 
     if let Ok(t) = std::env::var("GH_TOKEN")
-        && !t.is_empty() {
-            return Some(t);
-        }
+        && !t.is_empty()
+    {
+        return Some(t);
+    }
 
     if let Ok(output) = gh_auth_token().await
-        && !output.is_empty() {
-            return Some(output);
-        }
+        && !output.is_empty()
+    {
+        return Some(output);
+    }
 
     None
 }

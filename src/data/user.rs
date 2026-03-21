@@ -86,7 +86,8 @@ pub async fn fetch_user_profile(
                 .iter()
                 .map(|r| (r.name.clone(), r.languages.clone()))
                 .collect();
-            let languages = crate::data::languages::aggregate_languages(&lang_map, opts.effective_lang_limit());
+            let languages =
+                crate::data::languages::aggregate_languages(&lang_map, opts.effective_lang_limit());
 
             let top: Vec<RepoSummary> = {
                 let mut sorted = filtered;
@@ -203,11 +204,9 @@ fn sort_graphql_repos(repos: &mut [crate::api::graphql::GraphQLRepo], sort_by: c
     match sort_by {
         SortBy::Stars => repos.sort_by(|a, b| b.stargazer_count.cmp(&a.stargazer_count)),
         SortBy::Forks => repos.sort_by(|a, b| b.fork_count.cmp(&a.fork_count)),
-        SortBy::Size => repos.sort_by(|a, b| {
-            b.disk_usage
-                .unwrap_or(0)
-                .cmp(&a.disk_usage.unwrap_or(0))
-        }),
+        SortBy::Size => {
+            repos.sort_by(|a, b| b.disk_usage.unwrap_or(0).cmp(&a.disk_usage.unwrap_or(0)))
+        }
         SortBy::Name => repos.sort_by(|a, b| a.name.cmp(&b.name)),
         SortBy::Updated => {} // Already sorted by GitHub
     }

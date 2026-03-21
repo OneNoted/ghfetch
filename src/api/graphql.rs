@@ -178,15 +178,11 @@ impl GhClient {
         }
 
         Ok(ContributionsResponse {
-            total_commits: collection["totalCommitContributions"]
-                .as_u64()
-                .unwrap_or(0) as u32,
+            total_commits: collection["totalCommitContributions"].as_u64().unwrap_or(0) as u32,
             total_prs: collection["totalPullRequestContributions"]
                 .as_u64()
                 .unwrap_or(0) as u32,
-            total_issues: collection["totalIssueContributions"]
-                .as_u64()
-                .unwrap_or(0) as u32,
+            total_issues: collection["totalIssueContributions"].as_u64().unwrap_or(0) as u32,
             total_reviews: collection["totalPullRequestReviewContributions"]
                 .as_u64()
                 .unwrap_or(0) as u32,
@@ -195,10 +191,7 @@ impl GhClient {
         })
     }
 
-    pub async fn get_repos_with_languages(
-        &self,
-        login: &str,
-    ) -> Result<Vec<GraphQLRepo>> {
+    pub async fn get_repos_with_languages(&self, login: &str) -> Result<Vec<GraphQLRepo>> {
         let mut all_repos = Vec::new();
         let mut cursor: Option<String> = None;
 
@@ -209,9 +202,7 @@ impl GhClient {
                 "after": cursor,
             });
 
-            let data = self
-                .graphql(REPOS_WITH_LANGUAGES_QUERY, &variables)
-                .await?;
+            let data = self.graphql(REPOS_WITH_LANGUAGES_QUERY, &variables).await?;
 
             let repos_data = &data["data"]["user"]["repositories"];
             let page_info = &repos_data["pageInfo"];
@@ -229,10 +220,7 @@ impl GhClient {
         Ok(all_repos)
     }
 
-    pub async fn get_org_repos_graphql(
-        &self,
-        login: &str,
-    ) -> Result<Vec<GraphQLRepo>> {
+    pub async fn get_org_repos_graphql(&self, login: &str) -> Result<Vec<GraphQLRepo>> {
         let mut all_repos = Vec::new();
         let mut cursor: Option<String> = None;
 
@@ -243,9 +231,7 @@ impl GhClient {
                 "after": cursor,
             });
 
-            let data = self
-                .graphql(ORG_REPOS_QUERY, &variables)
-                .await?;
+            let data = self.graphql(ORG_REPOS_QUERY, &variables).await?;
 
             let repos_data = &data["data"]["organization"]["repositories"];
             let page_info = &repos_data["pageInfo"];

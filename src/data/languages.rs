@@ -126,3 +126,52 @@ pub fn format_lines(bytes: u64) -> String {
     let formatted: String = result.chars().rev().collect();
     format!("~{formatted}")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_languages() -> HashMap<String, Vec<(String, u64)>> {
+        HashMap::from([
+            (
+                "repo-a".to_string(),
+                vec![
+                    ("Rust".to_string(), 60),
+                    ("Python".to_string(), 30),
+                    ("C".to_string(), 10),
+                ],
+            ),
+            (
+                "repo-b".to_string(),
+                vec![("Rust".to_string(), 40), ("Nix".to_string(), 20)],
+            ),
+        ])
+    }
+
+    fn approx_eq(left: f64, right: f64) {
+        assert!((left - right).abs() < 0.001, "{left} != {right}");
+    }
+
+    #[test]
+    fn truncated_breakdown_adds_other_bucket() {
+        let breakdown = aggregate_languages(&sample_languages(), 2);
+
+        assert_eq!(breakdown.total_bytes, 160);
+        assert_eq!(breakdown.entries.len(), 3);
+        assert_eq!(breakdown.entries[0].name, "Rust");
+        assert_eq!(breakdown.entries[1].name, "Python");
+        assert_eq!(breakdown.entries[2].name, "Other");
+        assert_eq!(breakdown.entries[2].bytes, 30);
+        approx_eq(breakdown.entries[0].percentage, 62.5);
+        approx_eq(breakdown.entries[1].percentage, 18.75);
+        approx_eq(breakdown.entries[2].percentage, 18.75);
+    }
+
+    #[test]
+    fn unbounded_breakdown_keeps_individual_languages() {
+        let breakdown = aggregate_languages(&sample_languages(), 0);
+
+        assert_eq!(breakdown.entries.len(), 4);
+        assert!(breakdown.entries.iter().all(|entry| entry.name != "Other"));
+    }
+}
