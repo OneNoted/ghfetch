@@ -53,15 +53,18 @@ pub fn aggregate_languages(
 
     entries.sort_by(|a, b| b.bytes.cmp(&a.bytes));
 
-    if limit > 0 {
-        entries.truncate(limit);
+    if limit > 0 && entries.len() > limit {
+        let hidden = entries.split_off(limit);
+        let hidden_bytes: u64 = hidden.iter().map(|entry| entry.bytes).sum();
 
-        // Recalculate percentages for the truncated set
-        let shown_bytes: u64 = entries.iter().map(|e| e.bytes).sum();
-        if shown_bytes > 0 {
-            for entry in &mut entries {
-                entry.percentage = (entry.bytes as f64 / shown_bytes as f64) * 100.0;
-            }
+        if hidden_bytes > 0 {
+            // Keep the card totals honest by surfacing truncated languages as a single tail bucket.
+            entries.push(LanguageEntry {
+                name: "Other".to_string(),
+                bytes: hidden_bytes,
+                percentage: (hidden_bytes as f64 / total_bytes as f64) * 100.0,
+                repo_count: hidden.iter().map(|entry| entry.repo_count).sum(),
+            });
         }
     }
 
