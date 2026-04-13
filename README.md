@@ -50,6 +50,7 @@ Unauthenticated mode still works for public data, but GitHub rate limits are muc
 ghfetch octocat
 ghfetch user octocat --all
 ghfetch repo rust-lang/rust
+ghfetch repo https://github.com/rust-lang/rust
 ghfetch org rust-lang --languages
 ghfetch octocat --json
 ghfetch repo rust-lang/rust --theme latte
@@ -59,7 +60,7 @@ ghfetch repo rust-lang/rust --theme latte
 
 - `ghfetch [username]`
 - `ghfetch user <username>`
-- `ghfetch repo <owner/repo>`
+- `ghfetch repo <owner/repo|github-url|ssh-remote>`
 - `ghfetch org <orgname>`
 
 ### Common flags
@@ -72,7 +73,7 @@ ghfetch repo rust-lang/rust --theme latte
 ## Notes
 
 - `ghfetch user <username>` shows a compact summary by default. Use `--all` to include every section, or specific section flags like `--repos` or `--languages`.
-- `ghfetch org <orgname>` and `ghfetch repo <owner/repo>` show language summaries by default.
+- `ghfetch org <orgname>` and `ghfetch repo <owner/repo|github-url|ssh-remote>` show language summaries by default.
 - Detailed language mode (`--languages`) prints a wider table instead of the card view.
 
 ## Development
