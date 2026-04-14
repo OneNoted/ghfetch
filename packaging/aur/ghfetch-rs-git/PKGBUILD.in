@@ -18,6 +18,7 @@ sha256sums=('SKIP')
 pkgver() {
   cd "${srcdir}/ghfetch"
 
+  local cargo_version
   local description
   description="$(git describe --long --tags --abbrev=7 --match 'v[0-9]*' 2>/dev/null || true)"
 
@@ -27,7 +28,10 @@ pkgver() {
     return
   fi
 
-  printf '0.0.0.r%s.g%s\n' \
+  cargo_version="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)"
+
+  printf '%s.r%s.g%s\n' \
+    "${cargo_version:-0.0.0}" \
     "$(git rev-list --count HEAD)" \
     "$(git rev-parse --short=7 HEAD)"
 }
