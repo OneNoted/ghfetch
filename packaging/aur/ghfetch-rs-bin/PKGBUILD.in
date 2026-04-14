@@ -1,0 +1,19 @@
+# Maintainer: ${AUR_MAINTAINER_NAME} <${AUR_MAINTAINER_EMAIL}>
+
+pkgname=${AUR_PKGNAME}
+pkgver=${AUR_PKGVER}
+pkgrel=${AUR_PKGREL}
+pkgdesc='GitHub stats in the terminal, neofetch-style (prebuilt binary)'
+arch=('x86_64')
+url='https://github.com/OneNoted/ghfetch'
+license=('MIT')
+depends=('gcc-libs' 'glibc' 'openssl')
+provides=('ghfetch')
+conflicts=('ghfetch' 'ghfetch-rs-git')
+source=("${AUR_ARCHIVE_NAME}::https://github.com/${AUR_REPO_SLUG}/releases/download/v${AUR_PKGVER}/${AUR_ARCHIVE_NAME}")
+sha256sums=('${AUR_ARCHIVE_SHA256}')
+
+package() {
+  install -Dm755 "${srcdir}/${AUR_ARCHIVE_ROOT}/ghfetch" "${pkgdir}/usr/bin/ghfetch"
+  install -Dm644 "${srcdir}/${AUR_ARCHIVE_ROOT}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
