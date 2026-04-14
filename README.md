@@ -25,6 +25,13 @@ GitHub stats in the terminal, neofetch-style.
 cargo install ghfetch
 ```
 
+### From the AUR
+
+```bash
+paru -S ghfetch-rs-bin
+paru -S ghfetch-rs-git
+```
+
 ### From source
 
 ```bash
@@ -83,6 +90,32 @@ cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test
 ```
+
+## Release Automation
+
+This repository ships two AUR packages:
+
+- `ghfetch-rs-bin` for tagged GitHub release artifacts
+- `ghfetch-rs-git` for the live `main` branch
+
+The package names are suffixed with `-rs` because `ghfetch` is already taken in the AUR, but both packages still install the `ghfetch` executable.
+
+### GitHub Actions flow
+
+- Pushing a `vX.Y.Z` tag builds `ghfetch-X.Y.Z-x86_64-unknown-linux-gnu.tar.gz`, publishes a GitHub Release, and updates `ghfetch-rs-bin`
+- Pushing to `main` refreshes `ghfetch-rs-git`
+- CI also renders both AUR package definitions to catch metadata regressions early
+
+### Required repository secret
+
+Add `AUR_SSH_PRIVATE_KEY` to the GitHub repository secrets. It should be the private key for the AUR account `notes`, with the matching public key registered in that AUR account.
+
+The generated AUR commits use:
+
+- `Jonatan Jonasson`
+- `notes@madeingotland.com`
+
+The AUR templates and publish scripts live under [`packaging/aur`](/home/notes/Projects/ghfetch/packaging/aur) and [`scripts`](/home/notes/Projects/ghfetch/scripts).
 
 ## License
 

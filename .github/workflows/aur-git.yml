@@ -1,0 +1,61 @@
+name: Publish AUR Git Package
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  publish-aur-git:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+
+    steps:
+      - name: Install packaging tools
+        run: pacman -Sy --noconfirm --needed gettext git openssh
+
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create build user
+        run: |
+          useradd --create-home --shell /bin/bash builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+
+      - name: Configure AUR SSH
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          test -n "${AUR_SSH_PRIVATE_KEY}"
+          install -d -m 700 /home/builder/.ssh
+          printf '%s\n' "${AUR_SSH_PRIVATE_KEY}" > /home/builder/.ssh/aur
+          chmod 600 /home/builder/.ssh/aur
+          ssh-keyscan -H aur.archlinux.org >> /home/builder/.ssh/known_hosts
+          cat <<'EOF' > /home/builder/.ssh/config
+          Host aur.archlinux.org
+            User aur
+            IdentityFile ~/.ssh/aur
+          EOF
+          chmod 600 /home/builder/.ssh/config
+          chown -R builder:builder /home/builder/.ssh
+
+      - name: Compute ghfetch-rs-git version
+        id: meta
+        run: |
+          pkgver="$(su builder -c "cd '$GITHUB_WORKSPACE' && scripts/compute-git-pkgver.sh .")"
+          echo "pkgver=${pkgver}" >> "$GITHUB_OUTPUT"
+
+      - name: Render ghfetch-rs-git
+        run: |
+          su builder -c "cd '$GITHUB_WORKSPACE' && \
+            scripts/render-aur-package.sh ghfetch-rs-git /tmp/ghfetch-rs-git \
+              --pkgver '${{ steps.meta.outputs.pkgver }}'"
+
+      - name: Publish ghfetch-rs-git
+        run: |
+          su builder -c "cd '$GITHUB_WORKSPACE' && \
+            scripts/publish-aur.sh ghfetch-rs-git /tmp/ghfetch-rs-git \
+              'chore: update ghfetch-rs-git to ${{ steps.meta.outputs.pkgver }}'"

@@ -28,3 +28,25 @@ jobs:
 
       - name: Test
         run: cargo test
+
+  aur-metadata:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+
+    steps:
+      - name: Install packaging tools
+        run: pacman -Sy --noconfirm --needed gettext git
+
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Create build user
+        run: |
+          useradd --create-home --shell /bin/bash builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+
+      - name: Render AUR package metadata
+        run: |
+          su builder -c "cd '$GITHUB_WORKSPACE' && \
+            scripts/render-aur-package.sh ghfetch-rs-git /tmp/ghfetch-rs-git --pkgver 0.1.0.r1.gabcdef0 && \
+            scripts/render-aur-package.sh ghfetch-rs-bin /tmp/ghfetch-rs-bin --pkgver 0.1.0 --sha256 0000000000000000000000000000000000000000000000000000000000000000"
