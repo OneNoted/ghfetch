@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      archive_name: ${{ steps.meta.outputs.archive_name }}
+      archive_sha256: ${{ steps.meta.outputs.archive_sha256 }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Validate tag version
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          cargo_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n1)"
+          test "${tag_version}" = "${cargo_version}"
+
+      - name: Run tests
+        run: cargo test --locked
+
+      - name: Build release archive
+        id: meta
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          archive_path="$(scripts/build-release-archive.sh "${version}" dist)"
+          archive_name="$(basename "${archive_path}")"
+          archive_sha256="$(cut -d' ' -f1 "${archive_path}.sha256")"
+
+          {
+            echo "version=${version}"
+            echo "archive_name=${archive_name}"
+            echo "archive_sha256=${archive_sha256}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/${{ steps.meta.outputs.archive_name }}
+            dist/${{ steps.meta.outputs.archive_name }}.sha256
+          generate_release_notes: true
+
+  publish-aur-bin:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    needs: release
+
+    steps:
+      - name: Install packaging tools
+        run: pacman -Sy --noconfirm --needed gettext git openssh
+
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Create build user
+        run: |
+          useradd --create-home --shell /bin/bash builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+
+      - name: Configure AUR SSH
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          test -n "${AUR_SSH_PRIVATE_KEY}"
+          install -d -m 700 /home/builder/.ssh
+          printf '%s\n' "${AUR_SSH_PRIVATE_KEY}" > /home/builder/.ssh/aur
+          chmod 600 /home/builder/.ssh/aur
+          ssh-keyscan -H aur.archlinux.org >> /home/builder/.ssh/known_hosts
+          cat <<'EOF' > /home/builder/.ssh/config
+          Host aur.archlinux.org
+            User aur
+            IdentityFile ~/.ssh/aur
+          EOF
+          chmod 600 /home/builder/.ssh/config
+          chown -R builder:builder /home/builder/.ssh
+
+      - name: Render ghfetch-rs-bin
+        run: |
+          su builder -c "cd '$GITHUB_WORKSPACE' && \
+            scripts/render-aur-package.sh ghfetch-rs-bin /tmp/ghfetch-rs-bin \
+              --pkgver '${{ needs.release.outputs.version }}' \
+              --sha256 '${{ needs.release.outputs.archive_sha256 }}'"
+
+      - name: Publish ghfetch-rs-bin
+        run: |
+          su builder -c "cd '$GITHUB_WORKSPACE' && \
+            scripts/publish-aur.sh ghfetch-rs-bin /tmp/ghfetch-rs-bin \
+              'chore: update ghfetch-rs-bin to ${{ needs.release.outputs.version }}'"

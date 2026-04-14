@@ -48,7 +48,7 @@ pub enum Command {
 
     /// Display repository stats
     Repo {
-        /// Repository in owner/repo format
+        /// Repository in owner/repo, GitHub URL, or GitHub SSH format
         repo: String,
 
         #[command(flatten)]
