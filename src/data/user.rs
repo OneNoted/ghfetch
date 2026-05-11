@@ -5,6 +5,7 @@ use crate::data::languages::LanguageBreakdown;
 use crate::data::stats::AggregateStats;
 use anyhow::Result;
 use serde::Serialize;
+use std::cmp::Reverse;
 use std::collections::HashMap;
 
 #[derive(Debug, Serialize)]
@@ -202,11 +203,9 @@ enum ReposResult {
 fn sort_graphql_repos(repos: &mut [crate::api::graphql::GraphQLRepo], sort_by: crate::cli::SortBy) {
     use crate::cli::SortBy;
     match sort_by {
-        SortBy::Stars => repos.sort_by(|a, b| b.stargazer_count.cmp(&a.stargazer_count)),
-        SortBy::Forks => repos.sort_by(|a, b| b.fork_count.cmp(&a.fork_count)),
-        SortBy::Size => {
-            repos.sort_by(|a, b| b.disk_usage.unwrap_or(0).cmp(&a.disk_usage.unwrap_or(0)))
-        }
+        SortBy::Stars => repos.sort_by_key(|repo| Reverse(repo.stargazer_count)),
+        SortBy::Forks => repos.sort_by_key(|repo| Reverse(repo.fork_count)),
+        SortBy::Size => repos.sort_by_key(|repo| Reverse(repo.disk_usage.unwrap_or(0))),
         SortBy::Name => repos.sort_by(|a, b| a.name.cmp(&b.name)),
         SortBy::Updated => {} // Already sorted by GitHub
     }
@@ -215,9 +214,9 @@ fn sort_graphql_repos(repos: &mut [crate::api::graphql::GraphQLRepo], sort_by: c
 fn sort_rest_repos(repos: &mut [crate::api::types::GitHubRepo], sort_by: crate::cli::SortBy) {
     use crate::cli::SortBy;
     match sort_by {
-        SortBy::Stars => repos.sort_by(|a, b| b.stargazers_count.cmp(&a.stargazers_count)),
-        SortBy::Forks => repos.sort_by(|a, b| b.forks_count.cmp(&a.forks_count)),
-        SortBy::Size => repos.sort_by(|a, b| b.size.cmp(&a.size)),
+        SortBy::Stars => repos.sort_by_key(|repo| Reverse(repo.stargazers_count)),
+        SortBy::Forks => repos.sort_by_key(|repo| Reverse(repo.forks_count)),
+        SortBy::Size => repos.sort_by_key(|repo| Reverse(repo.size)),
         SortBy::Name => repos.sort_by(|a, b| a.name.cmp(&b.name)),
         SortBy::Updated => {} // Already sorted by GitHub
     }

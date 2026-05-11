@@ -5,6 +5,7 @@ use crate::data::stats::AggregateStats;
 use crate::data::user::RepoSummary;
 use anyhow::Result;
 use serde::Serialize;
+use std::cmp::Reverse;
 use std::collections::HashMap;
 
 #[derive(Debug, Serialize)]
@@ -45,6 +46,10 @@ async fn fetch_org_graphql(
     opts: &OrgOpts,
 ) -> Result<OrgProfile> {
     let repos = client.get_org_repos_graphql(orgname).await?;
+    let repos: Vec<_> = repos
+        .into_iter()
+        .filter(|repo| !opts.no_forks || !repo.is_fork)
+        .collect();
 
     let stats = crate::data::stats::aggregate_from_graphql(&repos);
 
@@ -63,7 +68,7 @@ async fn fetch_org_graphql(
 
     let top_repos = if opts.show_repos() || opts.show_full_card() {
         let mut sorted = repos;
-        sorted.sort_by(|a, b| b.stargazer_count.cmp(&a.stargazer_count));
+        sorted.sort_by_key(|repo| Reverse(repo.stargazer_count));
         Some(
             sorted
                 .into_iter()
@@ -106,6 +111,10 @@ async fn fetch_org_rest(
     opts: &OrgOpts,
 ) -> Result<OrgProfile> {
     let repos = client.get_org_repos(orgname, 100).await?;
+    let repos: Vec<_> = repos
+        .into_iter()
+        .filter(|repo| !opts.no_forks || !repo.fork)
+        .collect();
 
     let stats = crate::data::stats::aggregate_from_rest(&repos);
 
@@ -127,7 +136,7 @@ async fn fetch_org_rest(
 
     let top_repos = if opts.show_repos() || opts.show_full_card() {
         let mut sorted = repos;
-        sorted.sort_by(|a, b| b.stargazers_count.cmp(&a.stargazers_count));
+        sorted.sort_by_key(|repo| Reverse(repo.stargazers_count));
         Some(
             sorted
                 .into_iter()

@@ -1,3 +1,4 @@
+pub mod breakdown;
 pub mod language_bar;
 pub mod org;
 pub mod repo;

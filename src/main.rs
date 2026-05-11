@@ -50,6 +50,15 @@ async fn main() -> Result<()> {
                 display::org::render(&profile, &opts, cli.theme, cli.no_color);
             }
         }
+        Command::Breakdown { username, opts } => {
+            let profile =
+                data::breakdown::fetch_breakdown_profile(&client, &username, &opts).await?;
+            if cli.json {
+                println!("{}", serde_json::to_string_pretty(&profile)?);
+            } else {
+                display::breakdown::render(&profile, &opts, cli.theme, cli.no_color);
+            }
+        }
     }
 
     Ok(())
