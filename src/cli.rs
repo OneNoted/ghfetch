@@ -63,6 +63,15 @@ pub enum Command {
         #[command(flatten)]
         opts: OrgOpts,
     },
+
+    /// Explain which repositories contribute to language totals
+    Breakdown {
+        /// GitHub username
+        username: String,
+
+        #[command(flatten)]
+        opts: BreakdownOpts,
+    },
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -80,6 +89,12 @@ pub enum SortBy {
     Updated,
     Size,
     Name,
+}
+
+#[derive(Clone, Copy, ValueEnum, PartialEq, Eq)]
+pub enum BreakdownBy {
+    Language,
+    Repo,
 }
 
 #[derive(Parser)]
@@ -117,7 +132,7 @@ pub struct UserOpts {
     pub sort_by: SortBy,
 
     /// Exclude forked repositories
-    #[arg(long)]
+    #[arg(long, visible_alias = "ignore-forks")]
     pub no_forks: bool,
 }
 
@@ -153,6 +168,37 @@ pub struct OrgOpts {
     /// Maximum number of repos to display
     #[arg(long, default_value_t = 10)]
     pub repo_limit: usize,
+
+    /// Exclude forked repositories
+    #[arg(long, visible_alias = "ignore-forks")]
+    pub no_forks: bool,
+}
+
+#[derive(Parser)]
+pub struct BreakdownOpts {
+    /// Group breakdown by language or repository
+    #[arg(long, value_enum, default_value_t = BreakdownBy::Language)]
+    pub by: BreakdownBy,
+
+    /// Show only this language
+    #[arg(long)]
+    pub language: Option<String>,
+
+    /// Show only this repository (name or owner/name)
+    #[arg(long)]
+    pub repo: Option<String>,
+
+    /// Maximum number of groups to display (0 means all)
+    #[arg(long, default_value_t = 10)]
+    pub limit: usize,
+
+    /// Maximum number of nested entries per group (0 means all)
+    #[arg(long, default_value_t = 10)]
+    pub repo_limit: usize,
+
+    /// Exclude forked repositories
+    #[arg(long, visible_alias = "ignore-forks")]
+    pub no_forks: bool,
 }
 
 impl UserOpts {

@@ -19,6 +19,7 @@ GitHub stats in the terminal, neofetch-style.
 - Catppuccin-based terminal themes
 - Optional JSON output for shell scripts and other tooling
 - Language breakdowns with detailed table mode
+- Repository breakdowns for language totals and estimated LoC
 - Contribution and streak stats when authenticated
 
 ## Installation
@@ -60,9 +61,12 @@ Unauthenticated mode still works for public data, but GitHub rate limits are muc
 ```bash
 ghfetch octocat
 ghfetch user octocat --all
+ghfetch user octocat --languages --ignore-forks
 ghfetch repo rust-lang/rust
 ghfetch repo https://github.com/rust-lang/rust
 ghfetch org rust-lang --languages
+ghfetch breakdown octocat --language Rust
+ghfetch breakdown octocat --by repo
 ghfetch octocat --json
 ghfetch repo rust-lang/rust --theme latte
 ```
@@ -73,6 +77,7 @@ ghfetch repo rust-lang/rust --theme latte
 - `ghfetch user <username>`
 - `ghfetch repo <owner/repo|github-url|ssh-remote>`
 - `ghfetch org <orgname>`
+- `ghfetch breakdown <username>`
 
 ### Common flags
 
@@ -80,12 +85,14 @@ ghfetch repo rust-lang/rust --theme latte
 - `--no-color` disables ANSI styling
 - `--theme <mocha|macchiato|frappe|latte>` selects the card palette
 - `--verbose` prints API request diagnostics to stderr
+- `--ignore-forks` / `--no-forks` excludes forked repositories from user, org, and breakdown repository totals
 
 ## Notes
 
 - `ghfetch user <username>` shows a compact summary by default. Use `--all` to include every section, or specific section flags like `--repos` or `--languages`.
 - `ghfetch org <orgname>` and `ghfetch repo <owner/repo|github-url|ssh-remote>` show language summaries by default.
 - Detailed language mode (`--languages`) prints a wider table instead of the card view.
+- `ghfetch breakdown <username>` shows which repositories contribute to language totals. Use `--language <name>`, `--repo <name|owner/name>`, `--by repo`, `--limit`, and `--repo-limit` to narrow the output. LoC is estimated from GitHub Linguist byte counts, not from per-author line ownership.
 
 ## Development
 
