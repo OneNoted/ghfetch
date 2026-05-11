@@ -1,3 +1,4 @@
+pub mod breakdown;
 pub mod contributions;
 pub mod languages;
 pub mod org;

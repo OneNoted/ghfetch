@@ -1,4 +1,5 @@
 use serde::Serialize;
+use std::cmp::Reverse;
 use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Clone)]
@@ -51,7 +52,7 @@ pub fn aggregate_languages(
         })
         .collect();
 
-    entries.sort_by(|a, b| b.bytes.cmp(&a.bytes));
+    entries.sort_by_key(|entry| Reverse(entry.bytes));
 
     if limit > 0 && entries.len() > limit {
         let hidden = entries.split_off(limit);

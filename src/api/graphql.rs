@@ -115,6 +115,7 @@ pub struct ContributionDay {
 #[derive(Debug, Deserialize, Clone)]
 pub struct GraphQLRepo {
     pub name: String,
+    pub name_with_owner: String,
     pub description: Option<String>,
     pub is_fork: bool,
     pub is_private: bool,
@@ -142,6 +143,10 @@ fn parse_repo_nodes(nodes: &serde_json::Value) -> Vec<GraphQLRepo> {
 
             repos.push(GraphQLRepo {
                 name: node["name"].as_str().unwrap_or_default().to_string(),
+                name_with_owner: node["nameWithOwner"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .to_string(),
                 description: node["description"].as_str().map(|s| s.to_string()),
                 is_fork: node["isFork"].as_bool().unwrap_or(false),
                 is_private: node["isPrivate"].as_bool().unwrap_or(false),
